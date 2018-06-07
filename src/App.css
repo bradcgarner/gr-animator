@@ -1,0 +1,128 @@
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+  font-size: 16px; /* was 100% */
+  font-family: 'Oxygen', sans-serif; /* Brad added */ 
+  /*font: inherit;*/
+  color: #333; /* Brad added */
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section, div {
+	display: flex; /* was block */
+}
+body {
+	line-height: 1;
+}
+ol, ul, li {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+/* @@@@@@@@@@ END MYER RESET @@@@@@@@@@@@@ */
+
+* {
+  box-sizing: border-box;
+}
+div::-webkit-scrollbar,
+p::-webkit-scrollbar,
+form::-webkit-scrollbar {
+  width: 0 !important;
+  display: none;
+}
+button:focus {
+  outline: none;
+}
+/* @@@@@@@@@@ END BRAD RESET @@@@@@@@@@@@@ */
+
+.column {
+  width: 10px;
+  flex-direction: column;
+}
+.rain {
+  height: 300px;
+  /* width: 100%; */
+  background-color: beige;
+  transition: background-color 0.1s ease-in-out;
+  position: relative;
+}
+
+.rain.raining {
+  /* background-color: blue; */
+}
+
+.raindrop {
+  position: absolute;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  background-color: transparent;
+  transition: top 0.2s ease-in-out;
+  border-radius: 50%;
+}
+.raindrop.raining {
+  top: 300px;
+  background-color: blue;
+}
+
+.drop {
+  height: 10px;
+  transition: background-color 0.1s ease-in-out;
+}
+
+.drop0 { background-color: white; }
+.drop1 { background-color: rgb(223, 223, 247); }
+.drop2 { background-color: rgb(163, 163, 199); }
+.drop3 { background-color: rgb(144, 144, 177); }
+.drop4 { background-color: rgb(148, 148, 197); }
+.drop5 { background-color: rgb(99, 99, 145); }
+.drop6 { background-color: rgb(77, 77, 126); }
+.drop7 { background-color: rgb(60, 60, 100); }
+.drop8 { background-color: rgb(47, 47, 90); }
+.drop9 { background-color: rgb(34, 34, 78); }
+.drop10 { background-color: rgb(21, 21, 66); }
+.drop11 { background-color: rgb(12, 12, 75); }
+.drop12 { background-color: rgb(9, 9, 114); }
+.drop13 { background-color: rgb(18, 18, 148); }
+.drop14 { background-color: rgb(12, 12, 177); }
+.drop15 { background-color: rgb(10, 10, 235); }
+.drop16 { background-color: rgb(108, 10, 235); }
+.drop17 { background-color: rgb(109, 23, 221); }
+.drop18 { background-color: rgb(109, 36, 206); }
+.drop19 { background-color: rgb(188, 47, 201); }
+.drop20 { background-color: rgb(185, 54, 202); }
+.drop21 { background-color: rgb(219, 63, 123); }
+.drop22 { background-color: rgb(224, 37, 109); }
+.drop23 { background-color: rgb(247, 16, 104); }
+.drop24 { background-color: rgb(228, 36, 36); }
+.drop25 { background-color: rgb(236, 17, 17); }
+.drop26 { background-color: rgb(180, 12, 12); }
+
+.slot-count {
+  font-size: 6px;
+}
