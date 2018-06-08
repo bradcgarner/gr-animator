@@ -74,21 +74,36 @@ export const drain = (slotsPrior, maxVerticalDuration) => {
   return {slots};
 };
 
-export const runoff = (slotsPrior, maxLateralDuration) => {
+export const runoff = (slotsPrior, maxLateralDuration, maxVolumeFlow) => {
   const slots = [...slotsPrior]; // e.g.[[0],[0,1,2,0,2],[1,3]]
   const slotLastIndex = slots.length-1;
-  const runoffLastIndex = slots[slotLastIndex].length-1 >= 0 ? slots[slotLastIndex].length-1 : 0 ;
-  const needsToRunoff = slots[slotLastIndex][runoffLastIndex] > maxLateralDuration;
-  if(needsToRunoff){
+  const dropsLastIndex = slots[slotLastIndex].length-1 >= 0 ? slots[slotLastIndex].length-1 : 0 ;
+  let runoffFirstIndex;
+  let runoffVolume = 0;
+  // only check last one (oldest one) for duration
+  const heldTooLong = slots[slotLastIndex][dropsLastIndex] > maxLateralDuration;
+  // check all against volume
+  const tooFull = slots[slotLastIndex].length > maxVolumeFlow;
+  const needsToRunoff = heldTooLong || tooFull ;
+  if(tooFull){
+    runoffFirstIndex = maxVolumeFlow;
+    slots[slotLastIndex] = slots[slotLastIndex].slice(0,runoffFirstIndex);
+    runoffVolume = dropsLastIndex+1 - runoffFirstIndex;
+  } else if(heldTooLong){
+    runoffFirstIndex = dropsLastIndex;
     slots[slotLastIndex] = slots[slotLastIndex].length <= 1 ?
       [0] :
       slots[slotLastIndex].slice(0,slots[slotLastIndex].length-1);
+    runoffVolume = 1;
   }
   return {
     slotLastIndex,
-    runoffLastIndex,
+    dropsLastIndex,
+    runoffFirstIndex,
+    heldTooLong,
+    tooFull,
     needsToRunoff,
-    runoffVolume: needsToRunoff ? 1 : 0,
+    runoffVolume,
     slots,
   };
 };
@@ -119,8 +134,8 @@ export const cycle = (state, rain, flow) => {
   // keys: slots
   const stateWithDrain = {...stateWithFlow, ...withDrain, slotsWithDrain: withDrain.slots};
 
-  const withRunoff = runoff(stateWithDrain.slots, state.maxLateralDuration);
-  // keys: slotLastIndex, runoffLastIndex, needsToRunoff, volume, slots
+  const withRunoff = runoff(stateWithDrain.slots, state.maxLateralDuration, state.maxVolumeFlow);
+  // keys: slotLastIndex, dropsLastIndex, needsToRunoff, volume, slots
   const stateWithRunoff = {...stateWithDrain, ...withRunoff, slotsWithRunoff: withRunoff.slots};
 
   let volume = 0;

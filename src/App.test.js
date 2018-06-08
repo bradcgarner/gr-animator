@@ -175,12 +175,16 @@ describe('helpers', () => {
     expect(result).toEqual(expectedResult);
   });
 
-  it('runoff true', () => {
+  it('runoff true duration', () => {
     const maxLateralDuration = 10;
+    const maxVolumeFlow = 3;
     const slotsPrior = [[0],[2,2,13],[0,15],[11],[17],[13]];
     const expectedResult = {
       slotLastIndex: 5,
-      runoffLastIndex: 0,
+      dropsLastIndex: 0,
+      runoffFirstIndex: 0,
+      heldTooLong: true,
+      tooFull: false,
       needsToRunoff: true,
       runoffVolume: 1,
       slots:           [[0],[2,2,13],[0,15],[11],[17],[0]],
@@ -188,12 +192,16 @@ describe('helpers', () => {
     const result = helpers.runoff(slotsPrior, maxLateralDuration);
     expect(result).toEqual(expectedResult);
   });
-  it('runoff false', () => {
+  it('runoff false duration', () => {
     const maxLateralDuration = 10;
+    const maxVolumeFlow = 3;
     const slotsPrior = [[0],[2,2,13],[0,15],[11],[17],[3]];
     const expectedResult = {
       slotLastIndex: 5,
-      runoffLastIndex: 0,
+      dropsLastIndex: 0,
+      runoffFirstIndex: undefined,
+      heldTooLong: false,
+      tooFull: false,
       needsToRunoff: false,
       runoffVolume: 0,
       slots:           [[0],[2,2,13],[0,15],[11],[17],[3]],
@@ -201,17 +209,106 @@ describe('helpers', () => {
     const result = helpers.runoff(slotsPrior, maxLateralDuration);
     expect(result).toEqual(expectedResult);
   });
-  it('runoff null', () => {
+  it('runoff null duration', () => {
     const maxLateralDuration = 10;
+    const maxVolumeFlow = 3;
     const slotsPrior = [[0],[2,2,13],[0,15],[11],[17],[]];
     const expectedResult = {
       slotLastIndex: 5,
-      runoffLastIndex: 0,
+      dropsLastIndex: 0,
+      runoffFirstIndex: undefined,
+      heldTooLong: false,
+      tooFull: false,
       needsToRunoff: false,
       runoffVolume: 0,
       slots:           [[0],[2,2,13],[0,15],[11],[17],[]],
     }
     const result = helpers.runoff(slotsPrior, maxLateralDuration);
+    expect(result).toEqual(expectedResult);
+  });
+  it('runoff true volume 1', () => {
+    const maxLateralDuration = 10;
+    const maxVolumeFlow = 1;
+    const slotsPrior = [[0],[2,2,13],[0,15],[11],[17],[13]];
+    const expectedResult = {
+      slotLastIndex: 5,
+      dropsLastIndex: 0,
+      runoffFirstIndex: 0,
+      heldTooLong: true,
+      tooFull: false,
+      needsToRunoff: true,
+      runoffVolume: 1,
+      slots:           [[0],[2,2,13],[0,15],[11],[17],[0]],
+    }
+    const result = helpers.runoff(slotsPrior, maxLateralDuration, maxVolumeFlow);
+    expect(result).toEqual(expectedResult);
+  });
+  it('runoff true duration high, volume at max', () => {
+    const maxLateralDuration = 10;
+    const maxVolumeFlow = 2;
+    const slotsPrior = [[0],[2,2,13],[0,15],[11],[17],[13,14]];
+    const expectedResult = {
+      slotLastIndex: 5,
+      dropsLastIndex: 1,
+      runoffFirstIndex: 1,
+      heldTooLong: true,
+      tooFull: false,
+      needsToRunoff: true,
+      runoffVolume: 1,
+      slots:           [[0],[2,2,13],[0,15],[11],[17],[13]],
+    }
+    const result = helpers.runoff(slotsPrior, maxLateralDuration, maxVolumeFlow);
+    expect(result).toEqual(expectedResult);
+  });
+  it('runoff true duration high and volume over by 2', () => {
+    const maxLateralDuration = 10;
+    const maxVolumeFlow = 2;
+    const slotsPrior = [[0],[2,2,13],[0,15],[11],[17],[13,14,11,15]];
+    const expectedResult = {
+      slotLastIndex: 5,
+      dropsLastIndex: 3,
+      runoffFirstIndex: 2,
+      heldTooLong: true,
+      tooFull: true,
+      needsToRunoff: true,
+      runoffVolume: 2,
+      slots:           [[0],[2,2,13],[0,15],[11],[17],[13,14]],
+    }
+    const result = helpers.runoff(slotsPrior, maxLateralDuration, maxVolumeFlow);
+    expect(result).toEqual(expectedResult);
+  });
+  it('runoff true volume over by 2', () => {
+    const maxLateralDuration = 20;
+    const maxVolumeFlow = 2;
+    const slotsPrior = [[0],[2,2,13],[0,15],[11],[17],[13,14,11,15]];
+    const expectedResult = {
+      slotLastIndex: 5,
+      dropsLastIndex: 3,
+      runoffFirstIndex: 2,
+      heldTooLong: false,
+      tooFull: true,
+      needsToRunoff: true,
+      runoffVolume: 2,
+      slots:           [[0],[2,2,13],[0,15],[11],[17],[13,14]],
+    }
+    const result = helpers.runoff(slotsPrior, maxLateralDuration, maxVolumeFlow);
+    expect(result).toEqual(expectedResult);
+  });
+  it('runoff true volume over by 3', () => {
+    const maxLateralDuration = 20;
+    const maxVolumeFlow = 1;
+    const slotsPrior = [[0],[2,2,13],[0,15],[11],[17],[13,14,11,15]];
+    const expectedResult = {
+      slotLastIndex: 5,
+      dropsLastIndex: 3,
+      runoffFirstIndex: 1,
+      heldTooLong: false,
+      tooFull: true,
+      needsToRunoff: true,
+      runoffVolume: 3,
+      slots:           [[0],[2,2,13],[0,15],[11],[17],[13]],
+    }
+    const result = helpers.runoff(slotsPrior, maxLateralDuration, maxVolumeFlow);
     expect(result).toEqual(expectedResult);
   });
 
@@ -237,17 +334,22 @@ describe('helpers', () => {
       slots: [[1,3,5],[2,2,3]],
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
+      maxVolumeFlow: 5,
     }
     const rain = 1;
     const flow = 0;
     const expectedResult = {
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
+      maxVolumeFlow: 5,
       rain: 1,
       raining: true,
       flow: 0,
       slotLastIndex: 1,
-      runoffLastIndex: 2,
+      dropsLastIndex: 2,
+      runoffFirstIndex: undefined,
+      heldTooLong: false,
+      tooFull: false,
       needsToRunoff: false,
       runoffVolume: 0,
       slotsWithIncrement:[[  2,4,6],[3,3,4]],
@@ -266,17 +368,22 @@ describe('helpers', () => {
       slots: [[1,3,5],[2,2,13]],
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
+      maxVolumeFlow: 5,
     }
     const rain = 1;
     const flow = 0;
     const expectedResult = {
+      maxVolumeFlow: 5,
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
       rain: 1,
       raining: true,
       flow: 0,
       slotLastIndex: 1,
-      runoffLastIndex: 2,
+      dropsLastIndex: 2,
+      runoffFirstIndex: 2,
+      heldTooLong: true,
+      tooFull: false,
       needsToRunoff: true,
       runoffVolume: 1,
       slotsWithIncrement:[[  2,4,6],[3,3,14]],
@@ -295,17 +402,22 @@ describe('helpers', () => {
       slots: [[1,3,5],[2,2,13]],
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
+      maxVolumeFlow: 5,
     }
     const rain = 1;
     const flow = 2;
     const expectedResult = {
+      maxVolumeFlow: 5,
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
       rain: 1,
       raining: true,
       flow: 2,
       slotLastIndex: 1,
-      runoffLastIndex: 4,
+      dropsLastIndex: 4,
+      runoffFirstIndex: 4,
+      heldTooLong: true,
+      tooFull: false,
       needsToRunoff: true,
       runoffVolume: 1,
       slotsWithIncrement:[[  2,4,6],[    3,3,14]],
@@ -324,17 +436,22 @@ describe('helpers', () => {
       slots: [[1,3,5],[2,2,9]],
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
+      maxVolumeFlow: 5,
     }
     const rain = 1;
     const flow = 2;
     const expectedResult = {
+      maxVolumeFlow: 5,
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
       rain: 1,
       raining: true,
       flow: 2,
       slotLastIndex: 1,
-      runoffLastIndex: 4,
+      dropsLastIndex: 4,
+      runoffFirstIndex: undefined,
+      heldTooLong: false,
+      tooFull: false,
       needsToRunoff: false,
       runoffVolume: 0,
       slotsWithIncrement:[[  2,4,6],[    3,3,10]],
@@ -353,17 +470,22 @@ describe('helpers', () => {
       slots: [[1,3,10],[2,2,8]],
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
+      maxVolumeFlow: 6,
     }
     const rain = 1;
     const flow = 2;
     const expectedResult = {
+      maxVolumeFlow: 6,
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
       rain: 1,
       raining: true,
       flow: 2,
       slotLastIndex: 1,
-      runoffLastIndex: 5,
+      dropsLastIndex: 5,
+      runoffFirstIndex: undefined,
+      heldTooLong: false,
+      tooFull: false,
       needsToRunoff: false,
       runoffVolume: 0,
       slotsWithIncrement:[[  2,4,11],[      3,3,9]],
@@ -382,17 +504,22 @@ describe('helpers', () => {
       slots: [[1,3,10],[4,5,7],[2,2,8]],
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
+      maxVolumeFlow: 5,
     }
     const rain = 1;
     const flow = 2;
     const expectedResult = {
+      maxVolumeFlow: 5,
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
       rain: 1,
       raining: true,
       flow: 2,
       slotLastIndex: 2,
-      runoffLastIndex: 4,
+      dropsLastIndex: 4,
+      runoffFirstIndex: undefined,
+      heldTooLong: false,
+      tooFull: false,
       needsToRunoff: false,
       runoffVolume: 0,
       slotsWithIncrement:[[  2,4,11],[  5,6,8],[    3,3,9]],
@@ -411,17 +538,22 @@ describe('helpers', () => {
       slots: [[1,3,10],[4,5,7],[2,2,10]],
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
+      maxVolumeFlow: 5,
     }
     const rain = 1;
     const flow = 2;
     const expectedResult = {
+      maxVolumeFlow: 5,
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
       rain: 1,
       raining: true,
       flow: 2,
       slotLastIndex: 2,
-      runoffLastIndex: 4, // index of the one that ran off, not index AFTER runoff occurs
+      dropsLastIndex: 4, // index of the one that ran off, not index AFTER runoff occurs
+      runoffFirstIndex: 4,
+      heldTooLong: true,
+      tooFull: false,
       needsToRunoff: true,
       runoffVolume: 1,
       slotsWithIncrement:[[  2,4,11],[  5,6,8],[    3,3,11]],
@@ -440,17 +572,22 @@ describe('helpers', () => {
       slots: [[0,3,10],[4,5,7],[2,2,10]],
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
+      maxVolumeFlow: 5,
     }
     const rain = 1;
     const flow = 2;
     const expectedResult = {
+      maxVolumeFlow: 5,
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
       rain: 1,
       raining: true,
       flow: 2,
       slotLastIndex: 2,
-      runoffLastIndex: 4, // index of the one that ran off, not index AFTER runoff occurs
+      dropsLastIndex: 4, // index of the one that ran off, not index AFTER runoff occurs
+      runoffFirstIndex: 4,
+      heldTooLong: true,
+      tooFull: false,
       needsToRunoff: true,
       runoffVolume: 1,
       slotsWithIncrement:[[0,4,11],[  5,6,8],[    3,3,11]],
@@ -469,17 +606,22 @@ describe('helpers', () => {
       slots: [[0,3,10],[4,5,7],[2,2,10]],
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
+      maxVolumeFlow: 5,
     }
     const rain = 0;
     const flow = 2;
     const expectedResult = {
+      maxVolumeFlow: 5,
       maxLateralDuration: 10,
       maxVerticalDuration: 10,
       rain: 0,
       // raining: false,
       flow: 2,
       slotLastIndex: 2,
-      runoffLastIndex: 4, // index of the one that ran off, not index AFTER runoff occurs
+      dropsLastIndex: 4, // index of the one that ran off, not index AFTER runoff occurs
+      runoffFirstIndex: 4,
+      heldTooLong: true,
+      tooFull: false,
       needsToRunoff: true,
       runoffVolume: 1,
       slotsWithIncrement:[[0,4,11],[  5,6,8],[    3,3,11]],
@@ -489,6 +631,40 @@ describe('helpers', () => {
       slotsWithRunoff:   [[0,4   ],[1,5,6,8],[1,1,3,3   ]],
       slots:             [[0,4   ],[1,5,6,8],[1,1,3,3   ]],
       volume: 9,
+    }
+    const result = helpers.cycle(state, rain, flow);
+    expect(result).toEqual(expectedResult);
+  });
+  it('cycle drain, flow, runoff 0', () => {
+    const state = {
+      slots: [[0,3,10],[4,5,7],[2,2,10]],
+      maxLateralDuration: 10,
+      maxVerticalDuration: 10,
+      maxVolumeFlow: 1,
+    }
+    const rain = 0;
+    const flow = 2;
+    const expectedResult = {
+      maxVolumeFlow: 1,
+      maxLateralDuration: 10,
+      maxVerticalDuration: 10,
+      rain: 0,
+      // raining: false,
+      flow: 2,
+      slotLastIndex: 2,
+      dropsLastIndex: 4, // index of the one that ran off, not index AFTER runoff occurs
+      runoffFirstIndex: 1,
+      heldTooLong: true,
+      tooFull: true,
+      needsToRunoff: true,
+      runoffVolume: 4,
+      slotsWithIncrement:[[0,4,11],[  5,6,8],[    3,3,11]],
+      slotsWithRain:     [[0,4,11],[  5,6,8],[    3,3,11]],
+      slotsWithFlow:     [[0,4,11],[  5,6,8],[1,1,3,3,11]],
+      slotsWithDrain:    [[0,4   ],[1,5,6,8],[1,1,3,3,11]],
+      slotsWithRunoff:   [[0,4   ],[1,5,6,8],[1         ]],
+      slots:             [[0,4   ],[1,5,6,8],[1         ]],
+      volume: 6,
     }
     const result = helpers.cycle(state, rain, flow);
     expect(result).toEqual(expectedResult);

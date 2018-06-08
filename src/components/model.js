@@ -1,5 +1,6 @@
 import React from 'react';
 import Column from './column';
+import Cistern from './cistern';
 
 export default class Model extends React.Component {
   constructor(props) {
@@ -10,11 +11,14 @@ export default class Model extends React.Component {
       columns: [],
       flow: [],
       rainIncrements: 4000,
-      maxLateralDuration: 15,
+      maxVolumeFlow: 5,
+      maxLateralDuration: 2,
       maxVerticalDuration: 2,
       incrementSpeed: 100, // columns increment
       rainSpeed: 30, // speed of rainfall
       clearRainSpeed: 300, // columns remove raindrop
+      downstreamVolume: 0,
+      clearDropSpeed: 300,
     }
     this.moveLateral = this.moveLateral.bind(this);
     this.increment = this.increment.bind(this);
@@ -43,19 +47,24 @@ export default class Model extends React.Component {
         columns[randomColumn] = columns[randomColumn] + 1;
       }
       this.setState({
-        rainCount: this.state.rainCount + 1,
+        rainCount: this.state.rainCount + randomCounter,
         columns,
       });
     }
   }
 
-  moveLateral(index) {
+  moveLateral(index, volume) {
     const flow = [...this.state.flow];
-    // flow[index] = flow[index] -1;
     if(index < this.state.columnCount-1){
-      flow[index+1] = flow[index+1] + 1;
+      flow[index+1] = flow[index+1] + volume;
     }
-    this.setState({flow});
+    const downstreamVolume = index === this.state.columnCount-1 ?
+      this.state.downstreamVolume + volume :
+      this.state.downstreamVolume ;
+    this.setState({
+      flow,
+      downstreamVolume,
+    });
   }
 
   render() {
@@ -65,16 +74,24 @@ export default class Model extends React.Component {
         rain = {this.state.columns[i]}
         flow = {this.state.flow[i]}
         moveLateral = {this.moveLateral}
+        maxVolumeFlow={this.state.maxVolumeFlow}
         maxLateralDuration={this.state.maxLateralDuration}
         maxVerticalDuration={this.state.maxVerticalDuration}
         incrementSpeed={this.state.incrementSpeed}
         clearRainSpeed={this.state.clearRainSpeed}
         index = {i}
       />
-    })
+    });
+    const downstream = <Cistern 
+      volume = {this.state.downstreamVolume}
+      clearDropSpeed={this.state.clearDropSpeed}
+      maxOutFlow = {0}
+      />
+
     return (
-      <div>
-      {columns}
+      <div className='model'>
+        {columns}
+        {downstream}
       </div>
     );
   }
