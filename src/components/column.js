@@ -5,6 +5,7 @@ export default class Column extends React.Component {
   constructor(props){
     super(props);
     this.state = {
+      cycles: 0,
       slotCount: 8,
       slots: [],
       raining: false,
@@ -53,6 +54,7 @@ export default class Column extends React.Component {
     const newState = cycle(this.state, rain, flow);
     const updatedState = {
       ...newState, 
+      cycles: this.state.cycles + 1,
       rainTotal: newState.rain + this.state.rainTotal,
       flowTotal: newState.flow + this.state.flowTotal,
       runoffTotal: newState.runoffVolume + this.state.runoffTotal,
@@ -82,6 +84,7 @@ export default class Column extends React.Component {
         <div className='profile'>
           {slots}
         </div>
+        <div className='slot-count'>{this.state.cycles}</div>
         <div className='slot-count'>{this.state.rainTotal}</div>
         <div className='slot-count'>{this.state.flowTotal}</div>
         <div className='slot-count'>{this.state.rainTotal + this.state.flowTotal}</div>

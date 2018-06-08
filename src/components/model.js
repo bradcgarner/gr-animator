@@ -1,11 +1,13 @@
 import React from 'react';
 import Column from './column';
 import Cistern from './cistern';
+import { precisionRound } from '../lib';
 
 export default class Model extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      cycles: 0,
       rainCount: 0,
       columnCount: 100,
       columns: [],
@@ -15,10 +17,11 @@ export default class Model extends React.Component {
       maxLateralDuration: 2,
       maxVerticalDuration: 2,
       incrementSpeed: 100, // columns increment
-      rainSpeed: 30, // speed of rainfall
+      rainSpeed: 500, // speed of rainfall
       clearRainSpeed: 300, // columns remove raindrop
       downstreamVolume: 0,
       clearDropSpeed: 300,
+      startTime: new Date().getTime(),
     }
     this.moveLateral = this.moveLateral.bind(this);
     this.increment = this.increment.bind(this);
@@ -41,14 +44,21 @@ export default class Model extends React.Component {
   increment(){
     if(this.state.rainCount < this.state.rainIncrements){
       const columns = [...this.state.columns];
-      const randomCounter = Math.floor(Math.random() * 20);
+      const randomCounter = Math.floor(Math.random() * 10);
       for(let i=0; i<randomCounter; i++){
         const randomColumn = Math.floor(Math.random() * this.state.columnCount);
         columns[randomColumn] = columns[randomColumn] + 1;
       }
+      const now = new Date().getTime();
+      const elapsedSeconds = (now - this.state.startTime)/1000;
+      const rainCount = this.state.rainCount + randomCounter;
+      const dropsPerSecond = rainCount / elapsedSeconds;
       this.setState({
-        rainCount: this.state.rainCount + randomCounter,
+        cycles: this.state.cycles + 1,
+        rainCount,
         columns,
+        elapsedSeconds,
+        dropsPerSecond,
       });
     }
   }
@@ -92,6 +102,10 @@ export default class Model extends React.Component {
       <div className='model'>
         {columns}
         {downstream}
+        <p>{this.state.cycles} cycles </p>
+        <p> {precisionRound(this.state.elapsedSeconds,2)} seconds </p>
+        <p> {this.state.rainCount} drops </p>
+        <p> {precisionRound(this.state.dropsPerSecond,2)} drops per second</p>
       </div>
     );
   }
